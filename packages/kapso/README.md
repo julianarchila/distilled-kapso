@@ -1,0 +1,132 @@
+# @distilled.cloud/kapso
+
+Effect-native [Kapso](https://kapso.ai) SDK for the WhatsApp Business Platform, generated from
+Kapso's [WhatsApp (Meta proxy) OpenAPI spec](https://docs.kapso.ai/api/meta/whatsapp/openapi-whatsapp.yaml).
+
+Not published yet. The package follows the layout of an
+[alchemy-run/distilled](https://github.com/alchemy-run/distilled) provider, so it can move there
+unchanged.
+
+## Installation
+
+```bash
+npm install @distilled.cloud/kapso effect
+```
+
+## Quick start
+
+```ts
+import { Effect, Layer } from "effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Kapso from "@distilled.cloud/kapso";
+
+const phone_number_id = "597907523413541";
+
+const program = Effect.gen(function* () {
+  const sent = yield* Kapso.sendMessage({
+    phone_number_id,
+    body: {
+      messaging_product: "whatsapp",
+      to: "15551234567",
+      type: "text",
+      text: { body: "Your order has shipped." },
+    },
+  });
+  return sent.messages[0]?.id;
+}).pipe(
+  // Outside the 24-hour customer service window only a template reaches the user.
+  Effect.catchTag("ReengagementWindowClosed", () =>
+    Kapso.sendMessage({
+      phone_number_id,
+      body: {
+        messaging_product: "whatsapp",
+        to: "15551234567",
+        type: "template",
+        template: { name: "order_update", language: { code: "en_US" } },
+      },
+    }).pipe(Effect.map((sent) => sent.messages[0]?.id)),
+  ),
+);
+
+const Live = Layer.mergeAll(FetchHttpClient.layer, Kapso.CredentialsFromEnv, Kapso.KapsoProtocol);
+
+program.pipe(Effect.provide(Live), Effect.runPromise);
+```
+
+### Read receipts and typing
+
+```ts
+yield* Kapso.markMessageAsRead({
+  phone_number_id,
+  body: {
+    messaging_product: "whatsapp",
+    status: "read",
+    message_id: inbound.id,
+    typing_indicator: { type: "text" },
+  },
+});
+```
+
+### Media
+
+`uploadMedia` takes the file as bytes and returns a media id to send. For inbound media,
+`getMediaUrl` returns a `download_url` that carries a signed token, valid for a few minutes, and
+`Media.downloadFromUrl` returns the file's bytes:
+
+```ts
+const media = yield* Kapso.getMediaUrl({ media_id, phone_number_id });
+const bytes = yield* Kapso.Media.downloadFromUrl(media.download_url!);
+```
+
+`download_url` is `Redacted`: its token alone downloads the file, no API key needed.
+`downloadMedia({ token })` is the same call with the token already in hand.
+
+### Webhooks
+
+```ts
+const body = yield* Kapso.Webhooks.constructEvent({
+  payload: rawBody, // the exact bytes Kapso sent
+  signature: request.headers.get("x-webhook-signature"),
+  secret: Redacted.make(env.KAPSO_WEBHOOK_SECRET),
+});
+for (const event of Kapso.Webhooks.eventsOf(body, request.headers.get("x-webhook-event"))) {
+  // event.type: "whatsapp.message.received", ...; batches are flattened.
+}
+```
+
+Deduplicate on `X-Idempotency-Key`: the signature has no timestamp. A send `sendMessage` accepted can
+still fail later; that failure arrives only as `whatsapp.message.failed`, with Meta's error in
+`message.kapso.statuses[].errors` (131053 for an image WhatsApp rejects).
+
+Inbound media carries Meta's media id (`message.image.id`, ...) for `getMediaUrl`, and Kapso's own
+copy in `message.kapso.media_url`, which downloads with no API key: treat both URLs as secrets.
+A sandbox number accepts only Kapso-format webhooks; Meta-format ones (`kind: "meta"`) are signed
+the same way and pass `verifySignature`, but are not typed.
+
+## Errors
+
+Kapso proxies Meta's errors and changes their status (a missing template answers 404), and refuses
+some sends itself with its own body (a closed 24-hour window is a 422 with no Graph code), so errors
+are classified by body:
+
+| Error | When |
+| --- | --- |
+| `ReengagementWindowClosed` | outside the 24-hour window only a template reaches the user: Kapso's own 422 (with `body.next_steps`), or Meta's code 131047 |
+| `GraphRateLimited` | Graph throttling (4, 80007, 130429, 131048, 131056); retried |
+| `MetaGraphError` | any other Graph code, with `code`, `subcode`, `details`, `fbtraceId` and a `category` (`template`, `media`, `parameter`, ...) |
+| `MessageInFlight` | 409: a send to this recipient is in flight; retried |
+| `ThreadNotOwner` | 409: on a shared number, another app owns the thread |
+| `PaymentRequired` | 402: the project cannot pay Meta's fee |
+| `SendsPaused` / `SendsPausedRetryable` | 423: sends paused for review; retried only with `Retry-After` |
+| `MarketingPreferenceStopped` | 422: the contact opted out of marketing |
+| `SandboxNotSupported` | 403: a sandbox number serves only messaging endpoints |
+
+`sendMessage` is not idempotent. The default retry policy retries 5xx and timeouts, so a send can be
+duplicated; use `Kapso.Retry.none` (or a policy of your own) where that matters.
+
+## Auth
+
+`KAPSO_API_KEY` (a project API key) as `X-API-Key`. Optional `KAPSO_API_BASE_URL` (default
+`https://api.kapso.ai/meta/whatsapp/v24.0`) and `KAPSO_MEDIA_BASE_URL` (default: the API base URL without its
+Graph version, where media downloads live). Or provide
+`Kapso.fromApiKey({ apiKey: Redacted.make(key) })`.

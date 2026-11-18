@@ -1,0 +1,8 @@
+node_modules/
+lib/
+.scripts-types/
+.generated-specs/
+*.tsbuildinfo
+.env
+.env.*
+packages/kapso/specs/spec-mirror-kapso/.meta/

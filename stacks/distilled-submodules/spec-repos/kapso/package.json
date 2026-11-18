@@ -1,0 +1,11 @@
+{
+  "name": "kapso-spec",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch-specs": "node fetch-specs.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0"
+  }
+}

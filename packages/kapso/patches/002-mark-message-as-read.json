@@ -1,0 +1,87 @@
+{
+  "description": "Split marking a message as read out of sendMessage. POST /{phone_number_id}/messages takes either a message or `{ status: \"read\", message_id, typing_indicator? }`, and the spec types both under one SendMessageResponse (messaging_product, contacts and messages required). A mark-read answers `{ \"success\": true }` instead: observed live on 2026-11-17 on an inbound message, with and without typing_indicator, and again on the same message. One operation per body keeps each response typed: sendMessage takes WhatsappMessage and returns SendMessageResponse; markMessageAsRead takes MarkReadRequest's members and returns `{ success }`. An unknown message id fails with Graph code 131009 (400).",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/shapes/com.kapso.whatsapp#SendMessageRequest/members/body/target",
+      "value": "com.kapso.whatsapp#WhatsappMessage"
+    },
+    {
+      "op": "remove",
+      "path": "/shapes/com.kapso.whatsapp#SendMessageRequestBody"
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#MarkMessageAsReadRequest",
+      "value": {
+        "type": "structure",
+        "members": {
+          "phone_number_id": {
+            "target": "smithy.api#String",
+            "traits": {
+              "smithy.api#httpLabel": {},
+              "smithy.api#required": {},
+              "smithy.api#documentation": "WhatsApp Business Phone Number ID"
+            }
+          },
+          "body": {
+            "target": "com.kapso.whatsapp#MarkReadRequest",
+            "traits": {
+              "smithy.api#httpPayload": {},
+              "smithy.api#required": {}
+            }
+          }
+        },
+        "traits": {
+          "smithy.api#input": {}
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#MarkMessageAsReadResponse",
+      "value": {
+        "type": "structure",
+        "members": {
+          "success": {
+            "target": "smithy.api#Boolean",
+            "traits": {
+              "smithy.api#required": {}
+            }
+          }
+        },
+        "traits": {
+          "smithy.api#output": {}
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#MarkMessageAsRead",
+      "value": {
+        "type": "operation",
+        "input": {
+          "target": "com.kapso.whatsapp#MarkMessageAsReadRequest"
+        },
+        "output": {
+          "target": "com.kapso.whatsapp#MarkMessageAsReadResponse"
+        },
+        "traits": {
+          "smithy.api#http": {
+            "method": "POST",
+            "uri": "/{phone_number_id}/messages",
+            "code": 200
+          },
+          "smithy.api#documentation": "Mark a message as read\n\nMarks an inbound message, and the ones before it in the conversation, as read. With `typing_indicator: { type: \"text\" }` the user also sees a typing indicator until you reply or about 25 seconds pass. Marking a message that is already read succeeds again."
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsApp/operations/-",
+      "value": {
+        "target": "com.kapso.whatsapp#MarkMessageAsRead"
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "distilled-kapso",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "generate": "pnpm --filter @distilled.cloud/kapso run generate",
+    "specs:fetch": "node scripts/fetch-specs.ts",
+    "typecheck": "tsrs -b",
+    "typecheck:ci": "tsrs -b --noCheck false",
+    "test": "vitest run",
+    "lint": "oxlint -c oxlint.config.ts",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@distilled.cloud/core": "workspace:*",
+    "@distilled.cloud/dev": "workspace:*",
+    "@effect/platform-node": "catalog:",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "rolldown": "catalog:",
+    "tsrs": "catalog:",
+    "vitest": "catalog:",
+    "yaml": "catalog:"
+  },
+  "devEngines": {
+    "runtime": [
+      {
+        "name": "node",
+        "version": "24",
+        "onFail": "warn"
+      }
+    ]
+  },
+  "packageManager": "pnpm@12.9.1"
+}

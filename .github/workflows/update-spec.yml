@@ -1,0 +1,55 @@
+name: Update spec
+
+# Upstream, a spec mirror refetches daily. This repo has no mirror, so this
+# workflow refetches Kapso's spec weekly, regenerates, and opens a pull request
+# when either changed. A failing generate (a stale patch pointer) fails the
+# run instead of opening a PR.
+#
+# Opening the PR needs "Allow GitHub Actions to create and approve pull
+# requests" in the repository's Actions settings.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          cache: true
+          install: true
+          require-lockfile: true
+
+      - name: Fetch spec and regenerate
+        run: |
+          pnpm specs:fetch
+          pnpm generate
+
+      - name: Open a pull request when anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- packages/kapso/specs packages/kapso/src/services; then
+            echo "Spec and SDK unchanged."
+            exit 0
+          fi
+          branch="chore/update-spec-$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add packages/kapso/specs packages/kapso/src/services packages/kapso/package.json
+          git commit -m "chore(kapso): update the WhatsApp spec and regenerate"
+          git push -u origin "$branch"
+          gh pr create --title "chore(kapso): update the WhatsApp spec and regenerate" \
+            --body "Weekly refetch of https://docs.kapso.ai/api/meta/whatsapp/openapi-whatsapp.yaml. Review the generated diff."

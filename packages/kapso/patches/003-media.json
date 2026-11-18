@@ -1,0 +1,20 @@
+{
+  "description": "Correct getMediaUrl and downloadMedia against live calls of 2026-11-17. getMediaUrl returns `file_size` as a number (67 for a 67-byte PNG); the spec says string. `download_url` carries a signed `token` that downloads the file with no API key (200, bytes identical to the upload), so it is a credential: both it and downloadMedia's `token` input are marked sensitive. The download path itself is corrected in src/protocol.ts, not here: the spec puts /media_download under the versioned base URL, where it answers 404 `WhatsApp configuration not found`; download_url points at /meta/whatsapp/media_download.",
+  "patches": [
+    {
+      "op": "replace",
+      "path": "/shapes/com.kapso.whatsapp#GetMediaUrlResponse/members/file_size/target",
+      "value": "smithy.api#Long"
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#GetMediaUrlResponse/members/download_url/traits/smithy.api#sensitive",
+      "value": {}
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#DownloadMediaRequest/members/token/traits/smithy.api#sensitive",
+      "value": {}
+    }
+  ]
+}

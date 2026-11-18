@@ -1,0 +1,96 @@
+{
+  "description": "Model what listMessages, listConversations and getPhoneNumber return, observed live on 2026-11-17 against the sandbox. A message without a reply context has `context: null`, not an absent key. `kapso.processing_status` is `processed` on every message, a value the spec's enum lacks. `kapso` also carries `origin` (`cloud_api`), `phone_number_id` and `statuses` (Meta's raw status history, documented in Kapso's webhook reference). A conversation carries `contact_name` at the top level, as Kapso's webhook reference describes. getPhoneNumber returns `webhook_configuration: { application }`, Meta's field for the app webhook URL.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponse/members/context/traits/com.distilled.openapi#nullable",
+      "value": {}
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponseKapsoProcessingStatus/members/PROCESSED",
+      "value": {
+        "target": "smithy.api#Unit",
+        "traits": {
+          "smithy.api#enumValue": "processed"
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponseKapso/members/origin",
+      "value": {
+        "target": "smithy.api#String",
+        "traits": {
+          "smithy.api#documentation": "Where the message came from, e.g. `cloud_api`."
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponseKapso/members/phone_number_id",
+      "value": {
+        "target": "smithy.api#String",
+        "traits": {
+          "smithy.api#documentation": "WhatsApp Business Phone Number ID the message belongs to."
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponseKapsoStatusesList",
+      "value": {
+        "type": "list",
+        "member": {
+          "target": "smithy.api#Document"
+        },
+        "traits": {}
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappMessageResponseKapso/members/statuses",
+      "value": {
+        "target": "com.kapso.whatsapp#WhatsappMessageResponseKapsoStatusesList",
+        "traits": {
+          "smithy.api#documentation": "Meta's raw status history for the message (`{ id, status, timestamp, recipient_id, errors? }` entries)."
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#WhatsappConversation/members/contact_name",
+      "value": {
+        "target": "smithy.api#String",
+        "traits": {
+          "smithy.api#documentation": "The contact's WhatsApp profile name."
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#GetPhoneNumberResponseWebhookConfiguration",
+      "value": {
+        "type": "structure",
+        "members": {
+          "application": {
+            "target": "smithy.api#String",
+            "traits": {
+              "smithy.api#documentation": "Webhook URL of the app subscribed to this number."
+            }
+          }
+        },
+        "traits": {
+          "com.distilled.openapi#additionalProperties": {}
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#GetPhoneNumberResponse/members/webhook_configuration",
+      "value": {
+        "target": "com.kapso.whatsapp#GetPhoneNumberResponseWebhookConfiguration"
+      }
+    }
+  ]
+}

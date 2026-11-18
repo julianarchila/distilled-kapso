@@ -1,0 +1,58 @@
+name: CI
+
+# Typecheck, lint, format, test, and prove the committed SDK is what the
+# pinned generator produces from the committed spec and patches.
+#
+# `tsconfig.base.json` sets `noCheck: true` so day-to-day `tsrs -b` only
+# EMITS the generated SDK; `typecheck:ci` checks it, as upstream's CI does.
+# No job calls Kapso.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, lint, test, regenerate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (with the pinned distilled submodule)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+
+      - name: Setup pnpm, Node.js and install dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          cache: true
+          install: true
+          require-lockfile: true
+
+      - name: Typecheck (generated code included)
+        run: pnpm typecheck:ci
+
+      - name: Lint (distilled's rule 4 plugin)
+        run: pnpm lint
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Test
+        run: pnpm test
+
+      # The generator runs in memory from the committed spec and patches; any
+      # diff means src/services/ was edited by hand (rule 2) or not regenerated.
+      # package.json is left out: generate stamps it with today's date.
+      - name: Regenerate and compare
+        run: |
+          pnpm generate
+          git diff --exit-code -- packages/kapso/src/services

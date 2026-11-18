@@ -1,0 +1,49 @@
+{
+  "description": "Paginate listMessages and listConversations. Both answer `paging: { cursors: { before, after }, next, previous }`; the spec models only `cursors`. Observed live on 2026-11-17 with limit=3 over 10 messages: `next` equals `cursors.after` while more pages remain and is null on the last page, where `cursors.after` is still set. So the next cursor is `paging.next`, passed back as `after`. Other list operations share the Paging shape but could not be observed (the sandbox answers 403 on them), and the ones that proxy Meta Graph return `next` as a URL, so they stay unpaginated.",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#Paging/members/next",
+      "value": {
+        "target": "smithy.api#String",
+        "traits": {
+          "smithy.api#documentation": "Cursor for the next page, null on the last page. Pass it as `after`.",
+          "com.distilled.openapi#nullable": {}
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#Paging/members/previous",
+      "value": {
+        "target": "smithy.api#String",
+        "traits": {
+          "smithy.api#documentation": "Cursor for the previous page, null on the first page. Pass it as `before`.",
+          "com.distilled.openapi#nullable": {}
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#ListMessages/traits/smithy.api#paginated",
+      "value": {
+        "mode": "cursor",
+        "inputToken": "after",
+        "outputToken": "paging.next",
+        "items": "data",
+        "pageSize": "limit"
+      }
+    },
+    {
+      "op": "add",
+      "path": "/shapes/com.kapso.whatsapp#ListConversations/traits/smithy.api#paginated",
+      "value": {
+        "mode": "cursor",
+        "inputToken": "after",
+        "outputToken": "paging.next",
+        "items": "data",
+        "pageSize": "limit"
+      }
+    }
+  ]
+}

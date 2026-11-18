@@ -1,4 +1,4 @@
-# @julianarchila/kapso
+# distilled-kapso
 
 Effect-native [Kapso](https://kapso.ai) SDK for the WhatsApp Business Platform, generated from
 Kapso's [WhatsApp (Meta proxy) OpenAPI spec](https://docs.kapso.ai/api/meta/whatsapp/openapi-whatsapp.yaml).
@@ -9,7 +9,7 @@ generator, running on `@distilled.cloud/core`.
 ## Installation
 
 ```bash
-npm install @julianarchila/kapso effect
+npm install distilled-kapso effect
 ```
 
 ## Quick start
@@ -17,7 +17,7 @@ npm install @julianarchila/kapso effect
 ```ts
 import { Effect, Layer } from "effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
-import * as Kapso from "@julianarchila/kapso";
+import * as Kapso from "distilled-kapso";
 
 const phone_number_id = "597907523413541";
 

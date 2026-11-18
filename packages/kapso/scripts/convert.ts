@@ -65,7 +65,7 @@ await runOpenApiConvert({
 
 // Patches, deferred operation names and telemetry traits. Telemetry names
 // default to the package name with `@distilled.cloud/` stripped; published as
-// `@julianarchila/kapso`, they are set to what `@distilled.cloud/kapso` would
+// `distilled-kapso`, they would read `DistilledKapso`, so they are set to what `@distilled.cloud/kapso` would
 // get: spans `Kapso.<Operation>`, rpc.system.name `kapso-api`, path labels
 // `kapso.<label>`.
 await finalizeConvert({

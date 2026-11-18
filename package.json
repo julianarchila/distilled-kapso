@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsrs -b",
-    "generate": "pnpm --filter @julianarchila/kapso run generate",
+    "generate": "pnpm --filter distilled-kapso run generate",
     "specs:fetch": "node scripts/fetch-specs.ts",
     "typecheck": "tsrs -b",
     "typecheck:ci": "tsrs -b --noCheck false",

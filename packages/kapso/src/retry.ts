@@ -8,7 +8,7 @@ import { type Policy, throttlingFactory, transientFactory } from "@distilled.clo
  *
  * @example
  * ```ts
- * import * as Kapso from "@julianarchila/kapso";
+ * import * as Kapso from "distilled-kapso";
  *
  * myEffect.pipe(Kapso.Retry.transient);
  * Effect.provide(myEffect, Layer.succeed(Kapso.Retry.Retry, customPolicy));

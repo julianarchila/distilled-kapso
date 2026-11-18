@@ -1,7 +1,7 @@
 # spec-mirror-kapso
 
 A snapshot of Kapso's [WhatsApp (Meta proxy) OpenAPI spec](https://docs.kapso.ai/api/meta/whatsapp/openapi-whatsapp.yaml),
-reduced to exactly the file the `@julianarchila/kapso` generator reads:
+reduced to exactly the file the `distilled-kapso` generator reads:
 
 - `specs/openapi-whatsapp.yaml`
 

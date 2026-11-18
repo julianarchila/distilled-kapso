@@ -1,5 +1,5 @@
 {
-  "name": "@julianarchila/kapso",
+  "name": "distilled-kapso",
   "version": "0.1.0",
   "description": "Effect-native Kapso (WhatsApp Business Platform) SDK, generated from Kapso's OpenAPI spec.",
   "keywords": [

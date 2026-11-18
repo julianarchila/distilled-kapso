@@ -26,10 +26,13 @@
  */
 import * as path from "node:path";
 import { runOpenApiConvert } from "@distilled.cloud/dev/codegen/openapi-cli";
+import { finalizeConvert } from "@distilled.cloud/dev/codegen/patches";
 import { parse as parseYaml } from "yaml";
 
+const root = path.resolve(import.meta.dirname, "..");
+
 await runOpenApiConvert({
-  root: path.resolve(import.meta.dirname, ".."),
+  root,
   specs: [
     {
       name: "whatsapp",
@@ -37,6 +40,8 @@ await runOpenApiConvert({
     },
   ],
   patchesDir: "patches",
+  // Finalized below, to set the telemetry names.
+  finalize: false,
   parse: (text) => parseYaml(text),
   options: {
     namespace: "com.kapso.whatsapp",
@@ -56,4 +61,18 @@ await runOpenApiConvert({
       "POST /{phone_number_id}": "updatePhoneNumber",
     },
   },
+});
+
+// Patches, deferred operation names and telemetry traits. Telemetry names
+// default to the package name with `@distilled.cloud/` stripped; published as
+// `@julianarchila/kapso`, they are set to what `@distilled.cloud/kapso` would
+// get: spans `Kapso.<Operation>`, rpc.system.name `kapso-api`, path labels
+// `kapso.<label>`.
+await finalizeConvert({
+  root,
+  patchesDir: "patches",
+  patchesFor: () => "",
+  // The converter computed the names; finalize only applies them.
+  operationNaming: "as-is",
+  telemetry: { prefix: "Kapso", system: "kapso-api", labelNamespace: "kapso" },
 });

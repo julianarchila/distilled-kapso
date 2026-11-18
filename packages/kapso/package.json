@@ -1,8 +1,16 @@
 {
-  "name": "@distilled.cloud/kapso",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@julianarchila/kapso",
+  "version": "0.1.0",
   "description": "Effect-native Kapso (WhatsApp Business Platform) SDK, generated from Kapso's OpenAPI spec.",
+  "keywords": [
+    "distilled",
+    "effect",
+    "kapso",
+    "sdk",
+    "whatsapp",
+    "whatsapp-cloud-api"
+  ],
+  "homepage": "https://github.com/julianarchila/distilled-kapso/tree/main/packages/kapso#readme",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -76,6 +84,9 @@
       "worker": "./src/services/*.ts",
       "default": "./lib/services/*.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsrs -b",

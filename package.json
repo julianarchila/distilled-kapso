@@ -5,7 +5,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "generate": "pnpm --filter @distilled.cloud/kapso run generate",
+    "build": "tsrs -b",
+    "generate": "pnpm --filter @julianarchila/kapso run generate",
     "specs:fetch": "node scripts/fetch-specs.ts",
     "typecheck": "tsrs -b",
     "typecheck:ci": "tsrs -b --noCheck false",

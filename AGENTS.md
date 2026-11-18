@@ -1,7 +1,7 @@
 # Working in this repo
 
 This repo builds one [distilled](https://github.com/alchemy-run/distilled) SDK,
-`@distilled.cloud/kapso`, outside the distilled monorepo. It follows distilled's rules,
+`@julianarchila/kapso`, outside the distilled monorepo. It follows distilled's rules,
 procedures and style; this file lists only what differs. Read [`vendor/distilled/AGENTS.md`](vendor/distilled/AGENTS.md) first: its 15 rules apply
 here unchanged, and reviewers cite them by number.
 
@@ -21,7 +21,7 @@ scripts/                 repo tooling: fetch-specs, derive-whatsapp-message-patc
 1. **The generator comes from the submodule.** `@distilled.cloud/dev` is not published, so
    `vendor/distilled` is pinned to a release tag and `packages/core` and `packages/dev` are
    symlinks into it. The package's `tsconfig.json`, `package.json` (`workspace:*`) and scripts are
-   therefore byte-for-byte what they would be upstream. Generated code and core must come from the
+   therefore what they would be upstream (except the package name, see 5). Generated code and core must come from the
    same tag: to move, check out the new tag in the submodule, copy its catalog versions into
    `pnpm-workspace.yaml`, run `pnpm install && pnpm generate`, and commit the submodule, the
    lockfile and the regenerated `src/services/` together.
@@ -41,7 +41,11 @@ scripts/                 repo tooling: fetch-specs, derive-whatsapp-message-patc
    `scripts/derive-whatsapp-message-patch.ts`, never edited by hand. The real fix belongs in
    distilled's converter (rule 6); if it ever reads such branches as a constraint, `pnpm
    patches:audit` reports the patch as unneeded.
-5. **The package stays `"private": true`** until a publishing scope is chosen.
+5. **The package is published under another name.** It is `@julianarchila/kapso` on npm, since
+   only distilled publishes under `@distilled.cloud`; everything else in `packages/kapso/` is laid
+   out as upstream. To release: bump `version` in its `package.json`, `pnpm build`, then
+   `pnpm --filter @julianarchila/kapso publish`. pnpm replaces `workspace:*` with the exact core
+   version, which must be one published on npm (the submodule's release tag).
 
 ## Everyday commands
 
